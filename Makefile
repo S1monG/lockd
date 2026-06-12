@@ -3,6 +3,7 @@
 
 CC := gcc
 CFLAGS := -Wall -Wextra -O2 -g
+LDLIBS := -lgpiod # Link against libgpiod for GPIO control
 
 SRCDIR := src
 TESTDIR := test
@@ -27,10 +28,10 @@ DEPS := $(LIBOBJ:.o=.d) $(APPOBJ:.o=.d) $(TESTOBJ:.o=.d) $(TESTVENDOROBJ:.o=.d)
 all: $(TARGET)
 
 $(TARGET): $(LIBOBJ) $(APPOBJ) | $(BINDIR)
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $^ $(LDLIBS) -o $@
 
 $(TESTBIN): $(TESTOBJ) $(TESTVENDOROBJ) $(LIBOBJ) | $(BINDIR)
-	$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@
+	$(CC) $(CFLAGS) $(INCLUDES) $^ $(LDLIBS) -o $@
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.c | $(BUILDDIR)
 	@mkdir -p $(dir $@)
