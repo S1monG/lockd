@@ -1,5 +1,3 @@
-// Small libgpiod wrapper to request a GPIO line and drive it high or low.
-
 #include "gpio.h"
 
 #include <gpiod.h>
@@ -12,14 +10,17 @@
 static struct gpiod_chip *gpio_chip = NULL;                    // cache the opened GPIO device
 static struct gpiod_line *gpio_lines[GPIO_MAX_PIN] = { NULL }; // cache requested lines
 
-static struct gpiod_line *get_gpio_line(int pin)
+// A pin is the physical contact (BCM 23, BCM 24). A line is the libgpiod software object you get after requesting that pin. 
+// You can request a line as input or output, and then set its value if it's an output. 
+// I cache the requested lines so I don't have to request them again every time I want to set them high or low.
+static struct gpiod_line *get_gpio_line(int pin) 
 {
     if (pin < 0 || pin >= GPIO_MAX_PIN) { // Validate pin number
         fprintf(stderr, "gpio: invalid BCM pin %d\n", pin);
         return NULL;
     }
 
-    if (gpio_lines[pin]) { // Return cached line if already requested
+    if (gpio_lines[pin]) {  // Return cached line if already requested
         return gpio_lines[pin];
     }
 
