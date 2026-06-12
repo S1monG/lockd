@@ -1,13 +1,13 @@
 #include <stdio.h>
 #include "common/hello.h"
-#include "drivers/gpio.h"
+#include "hal/door_lock.h"
 
 int main(void)
 {
     printf("%s\n", hello_message());
     
-    gpio_set_high(GREEN_LED_BCM_PIN);
-    gpio_set_low(RED_LED_BCM_PIN);
+    door_lock_lock();
+    door_lock_unlock();
 
     return 0;
 }
