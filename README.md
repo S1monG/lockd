@@ -3,6 +3,7 @@ TODO
 
 # Prerequisites
 - libgpiod: `sudo apt install libgpiod-dev` (for GPIO control)
+- libmicrohttpd: `sudo apt install libmicrohttpd-dev` (for HTTP server)
 
 # Build and run
 `make`        # build

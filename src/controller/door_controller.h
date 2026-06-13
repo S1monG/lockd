@@ -1,7 +1,10 @@
 #ifndef LOCKD_DOOR_CONTROLLER_H
 #define LOCKD_DOOR_CONTROLLER_H
 
-/* typedef enum { // TODO: keep?
+// TODO: keep?
+// A state is needed if I want to have access to the status of the door
+// or if I want to avoid locking/unlocking repeatedly when multiple events happen
+/* typedef enum {
     LOCKED,
     UNLOCKED
 } State;
