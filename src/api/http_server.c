@@ -12,9 +12,9 @@
 static struct MHD_Daemon *http_daemon = NULL;
 
 // callback to check which clients will be allowed to connect and/or to log client address
-static int on_client_connect (void *cls,
-                             const struct sockaddr *addr,
-                             socklen_t addrlen)
+enum MHD_Result on_client_connect(void *cls,
+                                const struct sockaddr *addr,
+                                socklen_t addrlen)
 {
     // when is address ever NULL?
     // TODO: replace with real address filtering, ex MHD_NO for everything except localhost/127.0.0.1
@@ -40,9 +40,9 @@ static int on_client_connect (void *cls,
 }
 
 // Using inet_ntoa which only handles IPv4 (and maybe not thread-safe)
-/* static int on_client_connect (void *cls,
-                              const struct sockaddr *addr,
-			                  socklen_t addrlen)
+/* static int on_client_connect(void *cls,
+                            const struct sockaddr *addr,
+			                socklen_t addrlen)
 {
     // TODO: replace with real address filtering, ex MHD_NO for everything except localhost/127.0.0.1
     if (addr == NULL) {
@@ -56,11 +56,11 @@ static int on_client_connect (void *cls,
 } */
 
 // callback handler for all URIs
-int answer_to_connection (void *cls, struct MHD_Connection *connection,
-                          const char *url,
-                          const char *method, const char *version,
-                          const char *upload_data,
-                          size_t *upload_data_size, void **req_cls)
+enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connection,
+                                    const char *url,
+                                    const char *method, const char *version,
+                                    const char *upload_data,
+                                    size_t *upload_data_size, void **req_cls)
 {
     struct MHD_Response *response;
     int ret;
