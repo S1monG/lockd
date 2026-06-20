@@ -16,3 +16,9 @@ When it is available through `apt`, you can install it with: `sudo apt install l
 `make clean`  # remove build/ and bin/
 
 `make test`   # run tests
+
+# Initial example usage
+0. Find the IP address of your server: `hostname -I`
+1. Start the server: `make run`
+2. Send a request from a device on the same network to the server: `curl -v http://<SERVER_IP>:8
+888/`:
