@@ -1,4 +1,5 @@
 #include "http_server.h"
+#include "controller/door_controller.h"
 
 #include <sys/types.h>
 #include <sys/select.h>
@@ -84,6 +85,8 @@ enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connectio
     ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
     // ret = MHD_queue_response(connection, MHD_HTTP_BAD_REQUEST, response);
     MHD_destroy_response(response);
+
+    door_controller_event(VALID_ACCESS);
 
     return ret;
 }
