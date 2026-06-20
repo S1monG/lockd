@@ -16,6 +16,9 @@ enum MHD_Result on_client_connect(void *cls,
                                 const struct sockaddr *addr,
                                 socklen_t addrlen)
 {
+    (void)cls;
+    (void)addrlen;
+
     // when is address ever NULL?
     // TODO: replace with real address filtering, ex MHD_NO for everything except localhost/127.0.0.1
     if (addr == NULL) {
@@ -62,6 +65,14 @@ enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connectio
                                     const char *upload_data,
                                     size_t *upload_data_size, void **req_cls)
 {
+    (void)cls;
+    (void)url;
+    (void)method;
+    (void)version;
+    (void)upload_data;
+    (void)upload_data_size;
+    (void)req_cls;
+
     struct MHD_Response *response;
     int ret;
 

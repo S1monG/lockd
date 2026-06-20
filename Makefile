@@ -2,8 +2,7 @@
 # Builds all .c files under src/ and runs unit tests under test/
 
 CC := gcc
-CFLAGS := -Wall -Wextra -O2 -g
-# CFLAGS += -I/usr/include
+CFLAGS := -Wall -Wextra -O3 -g
 LDLIBS := -lgpiod -lmicrohttpd # Link against libgpiod and libmicrohttpd for GPIO control and HTTP server
 
 SRCDIR := src
