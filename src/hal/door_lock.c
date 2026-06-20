@@ -3,12 +3,12 @@
 
 void door_lock_lock()
 {
-    gpio_set_high(RED_LED_BCM_PIN);
-    gpio_set_low(GREEN_LED_BCM_PIN);
+    const enum gpiod_line_value values[NUM_REQUESTED_OFFSETS] = {GPIOD_LINE_VALUE_INACTIVE, GPIOD_LINE_VALUE_ACTIVE};
+    gpio_set(values);
 }
 
 void door_lock_unlock()
 {
-    gpio_set_high(GREEN_LED_BCM_PIN);
-    gpio_set_low(RED_LED_BCM_PIN);
+    const enum gpiod_line_value values[NUM_REQUESTED_OFFSETS] = {GPIOD_LINE_VALUE_ACTIVE, GPIOD_LINE_VALUE_INACTIVE};
+    gpio_set(values);
 }

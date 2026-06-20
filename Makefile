@@ -3,6 +3,7 @@
 
 CC := gcc
 CFLAGS := -Wall -Wextra -O2 -g
+# CFLAGS += -I/usr/include
 LDLIBS := -lgpiod -lmicrohttpd # Link against libgpiod and libmicrohttpd for GPIO control and HTTP server
 
 SRCDIR := src

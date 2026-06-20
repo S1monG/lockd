@@ -4,70 +4,115 @@
 #include <errno.h>
 #include <stdio.h>
 
-#define GPIO_CHIP_NAME "gpiochip0" // Default first GPIO chip on most Pi boards. TODO configure
-#define GPIO_MAX_PIN 64
-
-static struct gpiod_chip *gpio_chip = NULL;                    // cache the opened GPIO device
-static struct gpiod_line *gpio_lines[GPIO_MAX_PIN] = { NULL }; // cache requested lines
+#define GPIO_CHIP_PATH "/dev/gpiochip0" // Default GPIO chip path on most Pi boards. TODO configure
+#define GPIO_MAX_LINES 54               // Pi zero W has 54 lines/pins
 
 // A pin is the physical contact (BCM 23, BCM 24). A line is the libgpiod software object you get after requesting that pin. 
 // You can request a line as input or output, and then set its value if it's an output. 
-// I cache the requested lines so I don't have to request them again every time I want to set them high or low.
-static struct gpiod_line *get_gpio_line(int pin) 
+// I cache the requested lines so I don't have to request them again every time I want to toggle them.
+static struct gpiod_line_request *line_request = NULL;
+
+static struct gpiod_line_request *request_output_lines(const unsigned int *offsets, 
+                                                    enum gpiod_line_value value, 
+                                                    const char *consumer)
 {
-    if (pin < 0 || pin >= GPIO_MAX_PIN) { // Validate pin number
-        fprintf(stderr, "gpio: invalid BCM pin %d\n", pin);
+    struct gpiod_request_config     *req_cfg = NULL;
+    struct gpiod_line_request       *request = NULL;
+    struct gpiod_line_settings      *settings;
+    struct gpiod_line_config        *line_cfg;
+    struct gpiod_chip               *chip;
+
+    // open gpio chip/device
+    chip = gpiod_chip_open(GPIO_CHIP_PATH);
+    if (!chip) {
+        perror("gpiod_chip_open"); // TODO perror or fprintf?
         return NULL;
     }
 
-    if (gpio_lines[pin]) {  // Return cached line if already requested
-        return gpio_lines[pin];
+    settings = gpiod_line_settings_new();
+    if (!settings) {
+        perror("gpiod_line_settings_new");
+        goto close_chip;
     }
 
-    if (!gpio_chip) { // Open GPIO chip if not already done
-        gpio_chip = gpiod_chip_open_by_name(GPIO_CHIP_NAME);
-        if (!gpio_chip) {
-            perror("gpiod_chip_open_by_name");
-            return NULL;
-        }
+    // configure value and output direction
+    gpiod_line_settings_set_direction(settings, GPIOD_LINE_DIRECTION_OUTPUT);
+    gpiod_line_settings_set_output_value(settings, value); // TODO: check what the default is
+
+    line_cfg = gpiod_line_config_new();
+    if (!line_cfg) {
+        perror("gpiod_line_config_new");
+        goto free_settings;
     }
 
-    struct gpiod_line *line = gpiod_chip_get_line(gpio_chip, pin); // Get line for the specified pin
-    if (!line) {
-        fprintf(stderr, "gpio: failed to get line for BCM pin %d\n", pin);
-        return NULL;
+    if (gpiod_line_config_add_line_settings(line_cfg, offsets, NUM_REQUESTED_OFFSETS, settings)) {
+        perror("gpiod_line_config_add_line_settings");
+        goto free_line_config;
     }
 
-    if (gpiod_line_request_output(line, "lockd", 0) < 0) { // Request line as output, initially low
-        perror("gpiod_line_request_output");
-        return NULL;
+    req_cfg = gpiod_request_config_new();
+    if (!req_cfg) {
+        perror("gpiod_request_config_new");
+        goto free_line_config;
     }
+    gpiod_request_config_set_consumer(req_cfg, consumer); // TODO: is this needed?
+    
+    // request a set of lines for exclusive usage.
+    request = gpiod_chip_request_lines(chip, req_cfg, line_cfg);
+    gpiod_request_config_free(req_cfg);
 
-    gpio_lines[pin] = line; // cache and return the line
-    return line;
+free_line_config:
+    gpiod_line_config_free(line_cfg);
+
+free_settings:
+    gpiod_line_settings_free(settings);
+
+close_chip:
+    gpiod_chip_close(chip);
+
+    return request;
 }
 
-void gpio_set_high(int pin)
+void gpio_init(void)
 {
-    struct gpiod_line *line = get_gpio_line(pin);
-    if (!line) {
+    if (line_request) {
         return;
     }
 
-    if (gpiod_line_set_value(line, 1) < 0) {
-        perror("gpiod_line_set_value");
+    unsigned int offsets[NUM_REQUESTED_OFFSETS] = {GREEN_LED_BCM_PIN, RED_LED_BCM_PIN};
+    enum gpiod_line_value value = GPIOD_LINE_VALUE_INACTIVE; // start lines low by default
+
+    line_request = request_output_lines(offsets, value, "toggle-gpiod");
+    if (!line_request) {
+        fprintf(stderr, "gpio: failed to initialize line request\n");
     }
 }
 
-void gpio_set_low(int pin)
+void gpio_close(void)
 {
-    struct gpiod_line *line = get_gpio_line(pin);
-    if (!line) {
-        return;
+    if (line_request) {
+        gpiod_line_request_release(line_request);
+        line_request = NULL;
     }
+}
 
-    if (gpiod_line_set_value(line, 0) < 0) {
-        perror("gpiod_line_set_value");
-    }
+// Set the values of all lines associated with a request.
+// values must be sized to contain the number of lines in the request (2)
+// The values must be freed by the caller.
+void gpio_set(const enum gpiod_line_value *values)
+{
+    // TODO: add checks for number of values = number of lines with gpiod_line_request_get_num_requested_lines
+    // and check for line_request != NULL
+    gpiod_line_request_set_values(line_request, values);
+}
+
+// Get the values of all requested lines.
+// values must be sized to contain the number of lines in the request (2)
+// The values must be freed by the caller.
+void gpio_get(enum gpiod_line_value *values)
+{
+    // TODO: add checks for number of values = number of lines with gpiod_line_request_get_num_requested_lines
+    // and check for line_request != NULL
+    gpiod_line_request_get_values(line_request, values);
 }
 
