@@ -16,7 +16,8 @@ void door_controller_event(Event event)
         // TODO: LOG
         break;
 
-    case TIMEOUT:
+    case LOCK_REQUEST:
+        // TODO: LOG
         door_lock_lock();
         break;
     

@@ -20,5 +20,7 @@ When it is available through `apt`, you can install it with: `sudo apt install l
 # Initial example usage
 0. Find the IP address of your server: `hostname -I`
 1. Start the server: `make run`
-2. Send a request from a device on the same network to the server: `curl -v http://<SERVER_IP>:8
-888/`:
+2. Send a request from a device on the same network to the server: 
+`curl -v http://<SERVER_IP>:8888/` or 
+`curl -v -X POST http://<SERVER_IP>:8888/lock` or
+`curl -v -X POST http://<SERVER_IP>:8888/unlock`

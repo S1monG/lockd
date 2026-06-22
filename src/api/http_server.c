@@ -23,7 +23,7 @@ enum MHD_Result on_client_connect(void *cls,
     (void)addrlen;
 
     // when is address ever NULL?
-    // TODO: replace with real address filtering, ex MHD_NO for everything except localhost/127.0.0.1
+    // TODO: replace with real address filtering, ex MHD_NO for everything except localhost/127.0.0.1/192.168.x.x
     if (addr == NULL) {
         return MHD_YES;
     }
@@ -45,22 +45,6 @@ enum MHD_Result on_client_connect(void *cls,
     return MHD_YES;
 }
 
-// Using inet_ntoa which only handles IPv4 (and maybe not thread-safe)
-/* static int on_client_connect(void *cls,
-                            const struct sockaddr *addr,
-			                socklen_t addrlen)
-{
-    // TODO: replace with real address filtering, ex MHD_NO for everything except localhost/127.0.0.1
-    if (addr == NULL) {
-        return MHD_YES;
-    }
-
-    const struct sockaddr_in *sin = (const struct sockaddr_in *)addr;
-    printf("Client connected: %s\n", inet_ntoa(sin->sin_addr));
-
-    return MHD_YES;
-} */
-
 // callback handler for all URIs
 enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connection,
                                     const char *url,
@@ -81,19 +65,20 @@ enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connectio
         const char *json_response  = "{ \"status\": \"LOCKED\" }"; // TODO: replace with real status
         response = MHD_create_response_from_buffer(strlen(json_response), (void*) json_response, MHD_RESPMEM_PERSISTENT);
     } else if (strcmp(method, "POST") == 0) {
-        char response_buffer[256] = {0};
         if (strcmp(url, "/unlock") == 0) {
             door_controller_event(VALID_ACCESS);
-            snprintf(response_buffer, sizeof(response_buffer), "{ \"message\": \"Door unlocked\" }");
+            const char *json_response  = "{ \"status\": \"UNLOCKED\" }";
+            response = MHD_create_response_from_buffer(strlen(json_response), (void*) json_response, MHD_RESPMEM_PERSISTENT);
         } else if (strcmp(url, "/lock") == 0) {
-            door_controller_event(TIMEOUT);
-            snprintf(response_buffer, sizeof(response_buffer), "{ \"message\": \"Door locked\" }");
+            door_controller_event(LOCK_REQUEST);
+            const char *json_response  = "{ \"status\": \"LOCKED\" }";
+            response = MHD_create_response_from_buffer(strlen(json_response), (void*) json_response, MHD_RESPMEM_PERSISTENT);
         } else {
-            return MHD_NO;
+            const char *json_response  = "{ \"status\": \"INVALID_REQUEST\" }";
+            response = MHD_create_response_from_buffer(strlen(json_response), (void*) json_response, MHD_RESPMEM_PERSISTENT);
         }
-        response = MHD_create_response_from_buffer(strlen(response_buffer), (void*) response_buffer, MHD_RESPMEM_MUST_COPY);
     } else {
-        return MHD_NO; // Method not allowed
+        return MHD_NO; // Method not allowed, TODO: return something more informative, ex 405 Method Not Allowed
     }
     
     MHD_add_response_header(response, "Content-Type", JSON_CONTENT_TYPE);
