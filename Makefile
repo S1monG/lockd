@@ -3,7 +3,7 @@
 
 CC := gcc
 CFLAGS := -Wall -Wextra -O3 -g
-LDLIBS := -lgpiod -lmicrohttpd # Link against libgpiod and libmicrohttpd for GPIO control and HTTP server
+LDLIBS := -pthread -lgpiod -lmicrohttpd # Link against libgpiod, libmicrohttpd and pthread for GPIO control, HTTP server and threading
 
 SRCDIR := src
 TESTDIR := test

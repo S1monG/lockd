@@ -1,21 +1,23 @@
 #ifndef LOCKD_DOOR_CONTROLLER_H
 #define LOCKD_DOOR_CONTROLLER_H
 
-// TODO: keep?
-// A state is needed if I want to have access to the status of the door
-// or if I want to avoid locking/unlocking repeatedly when multiple events happen
-/* typedef enum {
+// TODO: configure
+#define DOOR_OPEN_TIMEOUT_MS 10000 // Time in milliseconds after which the door should automatically lock again if left open
+
+typedef enum {
     LOCKED,
     UNLOCKED
 } State;
-*/
 
 typedef enum {
     VALID_ACCESS,
     INVALID_ACCESS,
-    LOCK_REQUEST // Used for both timeout events when the door has been opened for X seconds or as a "lock" event from the POST /lock endpoint
+    LOCK_REQUEST,
+    TIMEOUT // Used for timeout events when the door has been opened for X seconds. Should only ever be triggered by the timeout thread
 } Event;
 
-void door_controller_event(Event);
+void door_controller_init(void);
+void door_controller_stop(void);
+void door_controller_event(Event event);
 
 #endif // LOCKD_DOOR_CONTROLLER_H
