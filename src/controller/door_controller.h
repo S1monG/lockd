@@ -13,7 +13,7 @@
 typedef enum {
     VALID_ACCESS,
     INVALID_ACCESS,
-    TIMEOUT // When the door has been opened for X seconds
+    TIMEOUT // When the door has been opened for X seconds, can also be used as a "lock" event for the POST /lock endpoint
 } Event;
 
 void door_controller_event(Event);

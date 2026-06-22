@@ -10,15 +10,12 @@ int main(void)
 {
     printf("%s\n", hello_message());
     gpio_init();
-    
-    door_controller_event(VALID_ACCESS);
-    sleep(1);
-    door_controller_event(TIMEOUT);
-    
     http_server_init();
+
     getchar(); // processing-time friendly pause, waiting for enter key
+
     http_server_stop();
-    
     gpio_close();
+
     return 0;
 }

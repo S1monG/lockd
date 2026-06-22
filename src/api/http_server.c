@@ -10,6 +10,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#define JSON_CONTENT_TYPE "application/json"
+
 static struct MHD_Daemon *http_daemon = NULL;
 
 // callback to check which clients will be allowed to connect and/or to log client address
@@ -67,8 +69,6 @@ enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connectio
                                     size_t *upload_data_size, void **req_cls)
 {
     (void)cls;
-    (void)url;
-    (void)method;
     (void)version;
     (void)upload_data;
     (void)upload_data_size;
@@ -77,16 +77,28 @@ enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connectio
     struct MHD_Response *response;
     int ret;
 
-    // const char *page  = "<html><body>Hello, browser!</body></html>";
-    // response = MHD_create_response_from_buffer(strlen(page), (void*) page, MHD_RESPMEM_PERSISTENT);
-
-    response = MHD_create_response_from_buffer(0, NULL, MHD_RESPMEM_PERSISTENT);
+    if (strcmp(method, "GET") == 0) {
+        const char *json_response  = "{ \"status\": \"LOCKED\" }"; // TODO: replace with real status
+        response = MHD_create_response_from_buffer(strlen(json_response), (void*) json_response, MHD_RESPMEM_PERSISTENT);
+    } else if (strcmp(method, "POST") == 0) {
+        char response_buffer[256] = {0};
+        if (strcmp(url, "/unlock") == 0) {
+            door_controller_event(VALID_ACCESS);
+            snprintf(response_buffer, sizeof(response_buffer), "{ \"message\": \"Door unlocked\" }");
+        } else if (strcmp(url, "/lock") == 0) {
+            door_controller_event(TIMEOUT);
+            snprintf(response_buffer, sizeof(response_buffer), "{ \"message\": \"Door locked\" }");
+        } else {
+            return MHD_NO;
+        }
+        response = MHD_create_response_from_buffer(strlen(response_buffer), (void*) response_buffer, MHD_RESPMEM_MUST_COPY);
+    } else {
+        return MHD_NO; // Method not allowed
+    }
     
+    MHD_add_response_header(response, "Content-Type", JSON_CONTENT_TYPE);
     ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
-    // ret = MHD_queue_response(connection, MHD_HTTP_BAD_REQUEST, response);
     MHD_destroy_response(response);
-
-    door_controller_event(VALID_ACCESS);
 
     return ret;
 }
