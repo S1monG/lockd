@@ -97,3 +97,8 @@ void door_controller_event(Event event)
     }
     pthread_mutex_unlock(&event_mutex);
 }
+
+State door_controller_state()
+{
+    return state;
+}

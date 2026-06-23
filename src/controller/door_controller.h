@@ -18,6 +18,7 @@ typedef enum {
 
 void door_controller_init(void);
 void door_controller_stop(void);
-void door_controller_event(Event event);
+void door_controller_event(Event);
+State door_controller_state(void);
 
 #endif // LOCKD_DOOR_CONTROLLER_H

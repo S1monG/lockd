@@ -62,7 +62,7 @@ enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connectio
     int ret;
 
     if (strcmp(method, "GET") == 0) {
-        const char *json_response  = "{ \"status\": \"LOCKED\" }"; // TODO: replace with real status
+        const char *json_response = door_controller_state() == LOCKED ? "{ \"status\": \"LOCKED\" }" : "{ \"status\": \"UNLOCKED\" }";
         response = MHD_create_response_from_buffer(strlen(json_response), (void*) json_response, MHD_RESPMEM_PERSISTENT);
     } else if (strcmp(method, "POST") == 0) {
         if (strcmp(url, "/unlock") == 0) {
