@@ -67,6 +67,7 @@ void door_controller_event(Event event)
         }
         
         door_lock_unlock();
+        state = UNLOCKED;
         pthread_create(&timeout_thread, NULL, timeout_handler, NULL);
         timeout_thread_active = true;
         break;
@@ -84,6 +85,7 @@ void door_controller_event(Event event)
         }
 
         door_lock_lock();
+        state = LOCKED;
         
         break;
     case TIMEOUT:
@@ -91,6 +93,7 @@ void door_controller_event(Event event)
         // be joined when a new VALID_ACCESS or LOCK_REQUEST event is triggered
         // TODO: LOG
         door_lock_lock();
+        state = LOCKED;
         break;
     default:
         break;

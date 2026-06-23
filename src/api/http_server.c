@@ -66,6 +66,7 @@ enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connectio
         response = MHD_create_response_from_buffer(strlen(json_response), (void*) json_response, MHD_RESPMEM_PERSISTENT);
     } else if (strcmp(method, "POST") == 0) {
         if (strcmp(url, "/unlock") == 0) {
+            // TODO: check validity of request. For example passkey or something like that.
             door_controller_event(VALID_ACCESS);
             const char *json_response  = "{ \"status\": \"UNLOCKED\" }";
             response = MHD_create_response_from_buffer(strlen(json_response), (void*) json_response, MHD_RESPMEM_PERSISTENT);
