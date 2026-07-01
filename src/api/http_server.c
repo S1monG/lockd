@@ -9,10 +9,18 @@
 #include <microhttpd.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 #define JSON_CONTENT_TYPE "application/json"
+#define EXPECTED_TOKEN "securly-secured-secret-token"
 
 static struct MHD_Daemon *http_daemon = NULL;
+
+bool is_authorized(struct MHD_Connection *connection)
+{
+    const char *auth = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, "Authorization");
+    return auth != NULL && strcmp(auth, EXPECTED_TOKEN) == true;
+}
 
 // callback to check which clients will be allowed to connect and/or to log client address
 enum MHD_Result on_client_connect(void *cls,
@@ -62,6 +70,15 @@ enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connectio
 
     struct MHD_Response *response;
     int ret;
+
+    if (!is_authorized(connection)) {
+        const char *json_response  = "{ \"status\": \"UNAUTHORIZED\" }";
+        response = MHD_create_response_from_buffer(strlen(json_response), (void*) json_response, MHD_RESPMEM_PERSISTENT);
+        MHD_add_response_header(response, "Content-Type", JSON_CONTENT_TYPE);
+        ret = MHD_queue_response(connection, MHD_HTTP_UNAUTHORIZED, response);
+        MHD_destroy_response(response);
+        return ret;
+    }
 
     if (strcmp(method, "GET") == 0) {
         const char *json_response = door_controller_state() == LOCKED ? "{ \"status\": \"LOCKED\" }" : "{ \"status\": \"UNLOCKED\" }";
