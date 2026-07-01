@@ -22,10 +22,9 @@ enum MHD_Result on_client_connect(void *cls,
     (void)cls;
     (void)addrlen;
 
-    // when is address ever NULL?
-    // TODO: replace with real address filtering, ex MHD_NO for everything except localhost/127.0.0.1/192.168.x.x
+    // addr should generally not be NULL
     if (addr == NULL) {
-        return MHD_YES;
+        return MHD_NO;
     }
 
     char ipstr[INET6_ADDRSTRLEN] = {0};
@@ -34,15 +33,18 @@ enum MHD_Result on_client_connect(void *cls,
         const struct sockaddr_in *sin = (const struct sockaddr_in *)addr;
         if (inet_ntop(AF_INET, &sin->sin_addr, ipstr, sizeof(ipstr)) != NULL) {
             printf("Client connected: %s\n", ipstr); // TODO: logger
+            return MHD_YES;
         }
-    } else if (addr->sa_family == AF_INET6) {
-        const struct sockaddr_in6 *sin6 = (const struct sockaddr_in6 *)addr;
-        if (inet_ntop(AF_INET6, &sin6->sin6_addr, ipstr, sizeof(ipstr)) != NULL) {
-            printf("Client connected (v6): %s\n", ipstr); // TODO: logger
-        }
+        return MHD_NO; // Failed to convert address to string, why?
+    }
+    
+    if (addr->sa_family == AF_INET6) {
+        // TODO: Allow IPv6?
+        // TODO: log
+        return MHD_NO;
     }
 
-    return MHD_YES;
+    return MHD_NO; // Fallback
 }
 
 // callback handler for all URIs
