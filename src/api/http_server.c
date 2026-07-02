@@ -71,7 +71,7 @@ enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connectio
     int ret;
 
     if (!is_authorized(connection)) {
-        const char *json_response  = "{ \"status\": \"UNAUTHORIZED\" }";
+        const char *json_response  = "{ \"status\": \"UNAUTHORIZED\" }\n";
         response = MHD_create_response_from_buffer(strlen(json_response), (void*) json_response, MHD_RESPMEM_PERSISTENT);
         MHD_add_response_header(response, "Content-Type", JSON_CONTENT_TYPE);
         ret = MHD_queue_response(connection, MHD_HTTP_UNAUTHORIZED, response);
@@ -80,20 +80,20 @@ enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connectio
     }
 
     if (strcmp(method, "GET") == 0) {
-        const char *json_response = door_controller_state() == LOCKED ? "{ \"status\": \"LOCKED\" }" : "{ \"status\": \"UNLOCKED\" }";
+        const char *json_response = door_controller_state() == LOCKED ? "{ \"status\": \"LOCKED\" }\n" : "{ \"status\": \"UNLOCKED\" }\n";
         response = MHD_create_response_from_buffer(strlen(json_response), (void*) json_response, MHD_RESPMEM_PERSISTENT);
     } else if (strcmp(method, "POST") == 0) {
         if (strcmp(url, "/unlock") == 0) {
             // TODO: check validity of request. For example passkey or something like that.
             door_controller_event(VALID_ACCESS);
-            const char *json_response  = "{ \"status\": \"UNLOCKED\" }";
+            const char *json_response  = "{ \"status\": \"UNLOCKED\" }\n";
             response = MHD_create_response_from_buffer(strlen(json_response), (void*) json_response, MHD_RESPMEM_PERSISTENT);
         } else if (strcmp(url, "/lock") == 0) {
             door_controller_event(LOCK_REQUEST);
-            const char *json_response  = "{ \"status\": \"LOCKED\" }";
+            const char *json_response  = "{ \"status\": \"LOCKED\" }\n";
             response = MHD_create_response_from_buffer(strlen(json_response), (void*) json_response, MHD_RESPMEM_PERSISTENT);
         } else {
-            const char *json_response  = "{ \"status\": \"INVALID_REQUEST\" }";
+            const char *json_response  = "{ \"status\": \"INVALID_REQUEST\" }\n";
             response = MHD_create_response_from_buffer(strlen(json_response), (void*) json_response, MHD_RESPMEM_PERSISTENT);
         }
     } else {
