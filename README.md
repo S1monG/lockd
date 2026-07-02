@@ -21,6 +21,6 @@ When it is available through `apt`, you can install it with: `sudo apt install l
 0. Find the IP address of your server: `hostname -I`
 1. Start the server: `make run`
 2. Send a request from a device on the same network to the server: 
-`curl -v http://<SERVER_IP>:8888/` or 
-`curl -v -X POST http://<SERVER_IP>:8888/lock` or
-`curl -v -X POST http://<SERVER_IP>:8888/unlock`
+`curl -v -H "Authorization: securly-secured-secret-token" http://<SERVER_IP>:8888/` or 
+`curl -v -H "Authorization: securly-secured-secret-token" -X POST http://<SERVER_IP>:8888/lock` or
+`curl -v -H "Authorization: securly-secured-secret-token" -X POST http://<SERVER_IP>:8888/unlock`

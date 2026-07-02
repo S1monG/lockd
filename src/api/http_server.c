@@ -9,17 +9,16 @@
 #include <microhttpd.h>
 #include <string.h>
 #include <stdio.h>
-#include <stdbool.h>
 
 #define JSON_CONTENT_TYPE "application/json"
 #define EXPECTED_TOKEN "securly-secured-secret-token"
 
 static struct MHD_Daemon *http_daemon = NULL;
 
-bool is_authorized(struct MHD_Connection *connection)
+int is_authorized(struct MHD_Connection *connection)
 {
     const char *auth = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, "Authorization");
-    return auth != NULL && strcmp(auth, EXPECTED_TOKEN) == true;
+    return auth != NULL && strcmp(auth, EXPECTED_TOKEN) == 0;
 }
 
 // callback to check which clients will be allowed to connect and/or to log client address
