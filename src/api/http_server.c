@@ -13,6 +13,11 @@
 #define JSON_CONTENT_TYPE "application/json"
 #define EXPECTED_TOKEN "securly-secured-secret-token"
 
+static const char *const JSON_LOCKED = "{ \"status\": \"LOCKED\" }\n";
+static const char *const JSON_UNLOCKED = "{ \"status\": \"UNLOCKED\" }\n";
+static const char *const JSON_UNAUTHORIZED = "{ \"status\": \"UNAUTHORIZED\" }\n";
+static const char *const JSON_INVALID_REQUEST = "{ \"status\": \"INVALID_REQUEST\" }\n";
+
 static struct MHD_Daemon *http_daemon = NULL;
 
 int is_authorized(struct MHD_Connection *connection)
@@ -71,8 +76,7 @@ enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connectio
     int ret;
 
     if (!is_authorized(connection)) {
-        const char *json_response  = "{ \"status\": \"UNAUTHORIZED\" }\n";
-        response = MHD_create_response_from_buffer(strlen(json_response), (void*) json_response, MHD_RESPMEM_PERSISTENT);
+        response = MHD_create_response_from_buffer(strlen(JSON_UNAUTHORIZED), (void*) JSON_UNAUTHORIZED, MHD_RESPMEM_PERSISTENT);
         MHD_add_response_header(response, "Content-Type", JSON_CONTENT_TYPE);
         ret = MHD_queue_response(connection, MHD_HTTP_UNAUTHORIZED, response);
         MHD_destroy_response(response);
@@ -80,35 +84,32 @@ enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connectio
     }
 
     if (strcmp(method, "GET") == 0) {
-        if (strcmp(url, "/")) {
-            const char *json_response  = "{ \"status\": \"INVALID_REQUEST\" }\n";
-            response = MHD_create_response_from_buffer(strlen(json_response), (void*) json_response, MHD_RESPMEM_PERSISTENT);
+        if (strcmp(url, "/") == 0) {
+            if (door_controller_state() == LOCKED) {
+                response = MHD_create_response_from_buffer(strlen(JSON_LOCKED), (void*) JSON_LOCKED, MHD_RESPMEM_PERSISTENT);
+            } else {
+                response = MHD_create_response_from_buffer(strlen(JSON_UNLOCKED), (void*) JSON_UNLOCKED, MHD_RESPMEM_PERSISTENT);
+            }
         } else {
-            const char *json_response = door_controller_state() == LOCKED ? "{ \"status\": \"LOCKED\" }\n" : "{ \"status\": \"UNLOCKED\" }\n";
-            response = MHD_create_response_from_buffer(strlen(json_response), (void*) json_response, MHD_RESPMEM_PERSISTENT);
+            response = MHD_create_response_from_buffer(strlen(JSON_INVALID_REQUEST), (void*) JSON_INVALID_REQUEST, MHD_RESPMEM_PERSISTENT);
         }
     } else if (strcmp(method, "POST") == 0) {
         if (strcmp(url, "/unlock") == 0) {
-            // TODO: check validity of request. For example passkey or something like that.
             door_controller_event(VALID_ACCESS);
-            const char *json_response  = "{ \"status\": \"UNLOCKED\" }\n";
-            response = MHD_create_response_from_buffer(strlen(json_response), (void*) json_response, MHD_RESPMEM_PERSISTENT);
+            response = MHD_create_response_from_buffer(strlen(JSON_UNLOCKED), (void*) JSON_UNLOCKED, MHD_RESPMEM_PERSISTENT);
         } else if (strcmp(url, "/lock") == 0) {
             door_controller_event(LOCK_REQUEST);
-            const char *json_response  = "{ \"status\": \"LOCKED\" }\n";
-            response = MHD_create_response_from_buffer(strlen(json_response), (void*) json_response, MHD_RESPMEM_PERSISTENT);
+            response = MHD_create_response_from_buffer(strlen(JSON_LOCKED), (void*) JSON_LOCKED, MHD_RESPMEM_PERSISTENT);
         } else {
-            const char *json_response  = "{ \"status\": \"INVALID_REQUEST\" }\n";
-            response = MHD_create_response_from_buffer(strlen(json_response), (void*) json_response, MHD_RESPMEM_PERSISTENT);
+            response = MHD_create_response_from_buffer(strlen(JSON_INVALID_REQUEST), (void*) JSON_INVALID_REQUEST, MHD_RESPMEM_PERSISTENT);
         }
     } else {
         return MHD_NO; // Method not allowed, TODO: return something more informative, ex 405 Method Not Allowed
     }
-    
+
     MHD_add_response_header(response, "Content-Type", JSON_CONTENT_TYPE);
     ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
     MHD_destroy_response(response);
-
     return ret;
 }
 
