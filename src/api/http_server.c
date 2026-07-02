@@ -80,8 +80,13 @@ enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connectio
     }
 
     if (strcmp(method, "GET") == 0) {
-        const char *json_response = door_controller_state() == LOCKED ? "{ \"status\": \"LOCKED\" }\n" : "{ \"status\": \"UNLOCKED\" }\n";
-        response = MHD_create_response_from_buffer(strlen(json_response), (void*) json_response, MHD_RESPMEM_PERSISTENT);
+        if (strcmp(url, "/")) {
+            const char *json_response  = "{ \"status\": \"INVALID_REQUEST\" }\n";
+            response = MHD_create_response_from_buffer(strlen(json_response), (void*) json_response, MHD_RESPMEM_PERSISTENT);
+        } else {
+            const char *json_response = door_controller_state() == LOCKED ? "{ \"status\": \"LOCKED\" }\n" : "{ \"status\": \"UNLOCKED\" }\n";
+            response = MHD_create_response_from_buffer(strlen(json_response), (void*) json_response, MHD_RESPMEM_PERSISTENT);
+        }
     } else if (strcmp(method, "POST") == 0) {
         if (strcmp(url, "/unlock") == 0) {
             // TODO: check validity of request. For example passkey or something like that.
