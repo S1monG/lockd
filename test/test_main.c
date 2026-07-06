@@ -1,5 +1,5 @@
 #include "vendor/unity.h"
-#include "common/hello.h"
+#include "utils/hello.h"
 
 static void test_hello_message(void)
 {

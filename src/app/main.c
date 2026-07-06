@@ -2,7 +2,7 @@
 #include <unistd.h>
 
 #include "drivers/gpio.h"
-#include "common/hello.h"
+#include "utils/hello.h"
 #include "controller/door_controller.h"
 #include "api/http_server.h"
 

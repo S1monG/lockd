@@ -1,4 +1,4 @@
-#include "common/hello.h"
+#include "utils/hello.h"
 
 const char *hello_message(void)
 {
