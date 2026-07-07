@@ -1,5 +1,7 @@
 #include "logger.h"
 
+static FILE *log_target = NULL;
+
 static inline const char *log_level_to_string(enum log_level_t level)
 {
     switch (level) {
@@ -11,12 +13,33 @@ static inline const char *log_level_to_string(enum log_level_t level)
     }
 }
 
-void log(int level, const char *file, int line, const char *fmt, ...)
+void log_set_target(FILE *target, const char *path)
 {
-    printf("[%s] %s:%d: ", log_level_to_string(level), file, line);
+    if (target != NULL) {
+        log_target = target;
+        return;
+    }
+
+    if (path != NULL) {
+        FILE *file = fopen(path, "a");
+        if (file == NULL) {
+            fprintf(stderr, "Failed to open log file: %s\n", path);
+            return;
+        }
+        log_target = file;
+    }
+}
+
+void log_log(int level, const char *file, int line, const char *fmt, ...)
+{
+    if (log_target == NULL) {
+        return;
+    }
+
+    fprintf(log_target, "[%s] %s:%d: ", log_level_to_string(level), file, line);
     va_list args;
     va_start(args, fmt);
-    vprintf(fmt, args);
+    vfprintf(log_target, fmt, args);
     va_end(args);
-    printf("\n");
+    fprintf(log_target, "\n");
 }
