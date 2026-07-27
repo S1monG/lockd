@@ -37,7 +37,7 @@ static struct gpiod_line_request *request_output_lines(const unsigned int *offse
 
     // configure value and output direction
     gpiod_line_settings_set_direction(settings, GPIOD_LINE_DIRECTION_OUTPUT);
-    gpiod_line_settings_set_output_value(settings, value); // TODO: check what the default is
+    gpiod_line_settings_set_output_value(settings, value);
 
     line_cfg = gpiod_line_config_new();
     if (!line_cfg) {

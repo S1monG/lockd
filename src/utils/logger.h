@@ -1,4 +1,3 @@
-// TODO: 
 // make thread safe with some kind of file lock
 // add timestamp to log messages
 // color? 
