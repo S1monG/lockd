@@ -36,6 +36,7 @@ enum MHD_Result on_client_connect(void *cls,
 
     // addr should generally not be NULL
     if (addr == NULL) {
+        LOG_WARN("http_server: NULL address");
         return MHD_NO;
     }
 
@@ -44,15 +45,16 @@ enum MHD_Result on_client_connect(void *cls,
     if (addr->sa_family == AF_INET) {
         const struct sockaddr_in *sin = (const struct sockaddr_in *)addr;
         if (inet_ntop(AF_INET, &sin->sin_addr, ipstr, sizeof(ipstr)) != NULL) {
-            printf("Client connected: %s\n", ipstr); // TODO: logger
+            LOG_INFO("http_server: Client connected: %s", ipstr);
             return MHD_YES;
         }
+        LOG_WARN("http_server: Failed to convert address to string");
         return MHD_NO; // Failed to convert address to string, why?
     }
     
     if (addr->sa_family == AF_INET6) {
-        // TODO: Allow IPv6?
-        // TODO: log
+        // TODO: allow IPV6?
+        LOG_WARN("http_server: Attempt to connect with IPV6 address");
         return MHD_NO;
     }
 
@@ -76,6 +78,7 @@ enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connectio
     int ret;
 
     if (!is_authorized(connection)) {
+        door_controller_event(INVALID_ACCESS);
         response = MHD_create_response_from_buffer(strlen(JSON_UNAUTHORIZED), (void*) JSON_UNAUTHORIZED, MHD_RESPMEM_PERSISTENT);
         MHD_add_response_header(response, "Content-Type", JSON_CONTENT_TYPE);
         ret = MHD_queue_response(connection, MHD_HTTP_UNAUTHORIZED, response);
@@ -118,18 +121,19 @@ void http_server_init()
     http_daemon = MHD_start_daemon(MHD_USE_INTERNAL_POLLING_THREAD, PORT,
                                    &on_client_connect, NULL,
                                    &answer_to_connection, NULL, MHD_OPTION_END);
-    if (NULL == http_daemon) {
-        // TODO LOG
-    }
+    if (NULL == http_daemon)
+        LOG_ERROR("http_server: failed to start HTTP server on port %d", PORT);
+    else
+        LOG_INFO("http_server: started HTTP server on port %d", PORT);
 }
 
 void http_server_stop()
 {
     if (http_daemon != NULL) {
-        // TODO LOG
         MHD_stop_daemon(http_daemon);
         http_daemon = NULL;
     }
+    LOG_INFO("http_server: stopped HTTP server on port %d", PORT);
 }
 
 

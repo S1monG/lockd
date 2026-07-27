@@ -10,11 +10,6 @@ int main(void)
 {
     LOG_TARGET_STDOUT();
     LOG_TARGET_FILE("log.log");
-    LOG_INFO("hello number: %d", 42);
-    LOG_ERROR("");
-    LOG_WARN("this is a warning");
-
-    return 0;
 
     gpio_init();
     door_controller_init();

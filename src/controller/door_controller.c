@@ -22,6 +22,7 @@ void door_controller_init()
     door_lock_lock();
     state = LOCKED;
     timeout_thread_active = false;
+    LOG_INFO("door_controller: initialized to state LOCKED");
 }
 
 void door_controller_stop() 
@@ -31,6 +32,7 @@ void door_controller_stop()
         pthread_join(timeout_thread, NULL); // wait for the thread to finish
         timeout_thread_active = false;
     }
+    LOG_INFO("door_controller: stopped");
 }
 
 // If the thread recives a cancellation request, it will be cancelled at the 
@@ -49,6 +51,11 @@ void *timeout_handler(void *arg)
 
 void door_controller_event(Event event) 
 {
+    if (event == INVALID_ACCESS)
+        LOG_WARN("door_controller: invalid access attempt");
+    else
+        LOG_INFO("door_controller: received event %d", event);
+
     // create a cancelation point for the timeout thread
     if (event == TIMEOUT) {
         pthread_testcancel();
@@ -59,8 +66,6 @@ void door_controller_event(Event event)
     {
     case VALID_ACCESS:
         // Start timeout thread to automatically lock the door after a certain time if left open
-        // TODO: LOG
-        
         if (timeout_thread_active) {
             pthread_cancel(timeout_thread); // sends a cancellation request. Returns an error code if threadID is invalid
             pthread_join(timeout_thread, NULL); // wait for the thread to finish. Returns an error code if threadID is invalid
@@ -72,12 +77,10 @@ void door_controller_event(Event event)
         timeout_thread_active = true;
         break;
     case INVALID_ACCESS:
-        // TODO: LOG
+        LOG_WARN("door_controller: invalid access attempt");
         break;
     case LOCK_REQUEST:
         // Cancel any pending timeout thread since the door is now locked
-        // TODO: LOG
-        
         if (timeout_thread_active) {
             pthread_cancel(timeout_thread);
             pthread_join(timeout_thread, NULL); // wait for the thread to finish
@@ -86,16 +89,15 @@ void door_controller_event(Event event)
 
         door_lock_lock();
         state = LOCKED;
-        
         break;
     case TIMEOUT:
         // no need to set timeout_thread_active to false here since the thread will 
         // be joined when a new VALID_ACCESS or LOCK_REQUEST event is triggered
-        // TODO: LOG
         door_lock_lock();
         state = LOCKED;
         break;
     default:
+        LOG_ERROR("door_controller: received unknown event %d", event);
         break;
     }
     pthread_mutex_unlock(&event_mutex);

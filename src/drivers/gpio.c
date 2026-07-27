@@ -83,9 +83,10 @@ void gpio_init(void)
     enum gpiod_line_value value = GPIOD_LINE_VALUE_INACTIVE; // start lines low by default
 
     line_request = request_output_lines(offsets, value, "toggle-gpiod");
-    if (!line_request) {
-        fprintf(stderr, "gpio: failed to initialize line request\n");
-    }
+    if (!line_request)
+        LOG_ERROR("gpio: failed to initialize line request");
+    else
+        LOG_INFO("gpio: initialized line request for %d lines", NUM_REQUESTED_OFFSETS);
 }
 
 void gpio_close(void)
@@ -94,6 +95,7 @@ void gpio_close(void)
         gpiod_line_request_release(line_request);
         line_request = NULL;
     }
+    LOG_INFO("gpio: closed line request");
 }
 
 // Set the values of all lines associated with a request.
